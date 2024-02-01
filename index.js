@@ -46,5 +46,39 @@ client.once(Events.ClientReady, (readyClient) => {
   console.log(`Ready! Logged in as ${readyClient.user.tag}`);
 });
 
+
+// ! Event listener for Client#event:interactionCreate
+// Listen for the InteractionCreate event on the client
+client.on(Events.InteractionCreate, async interaction => {
+	// Check if the interaction is a chat input command (slash command)
+	if (!interaction.isChatInputCommand()) return;
+
+	// Get the command associated with the interaction's commandName
+	const command = interaction.client.commands.get(interaction.commandName);
+
+	// If no matching command is found, log an error and return
+	if (!command) {
+			console.error(`No command matching ${interaction.commandName} was found.`);
+			return;
+	}
+
+	try {
+			// Execute the found command with the interaction
+			await command.execute(interaction);
+	} catch (error) {
+			console.error(error);
+
+			// Check if the interaction has already been replied to or deferred
+			if (interaction.replied || interaction.deferred) {
+					// If already replied or deferred, follow up with an ephemeral (only visible to the user) error message
+					await interaction.followUp({ content: 'There was an error while executing this command!', ephemeral: true });
+			} else {
+					// If not replied or deferred, reply with an ephemeral error message
+					await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
+			}
+	}
+});
+
+
 // Log in to Discord with your client's token
 client.login(token);
